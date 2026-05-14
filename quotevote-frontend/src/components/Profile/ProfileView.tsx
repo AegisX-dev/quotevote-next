@@ -32,16 +32,16 @@ export function ProfileView({
   }
 
   return (
-    <div className="w-full py-6 space-y-6">
+    <div className="w-full pb-8">
       <ProfileHeader profileUser={profileUser} />
 
-      <Tabs defaultValue="all-posts" className="w-full">
-        <TabsList className="w-full">
-          <TabsTrigger value="all-posts" className="flex-1">All Posts</TabsTrigger>
-          <TabsTrigger value="voted" className="flex-1">Voted</TabsTrigger>
-          <TabsTrigger value="commented" className="flex-1">Commented</TabsTrigger>
-          <TabsTrigger value="quoted" className="flex-1">Quoted</TabsTrigger>
-          <TabsTrigger value="about" className="flex-1">About</TabsTrigger>
+      <Tabs defaultValue="all-posts" className="w-full mt-3">
+        <TabsList className="sticky top-0 z-10 w-full h-11 rounded-none border-b border-border bg-background/95 backdrop-blur-sm px-0">
+          <TabsTrigger value="all-posts" className="flex-1 h-full rounded-none text-xs sm:text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">All Posts</TabsTrigger>
+          <TabsTrigger value="voted" className="flex-1 h-full rounded-none text-xs sm:text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Voted</TabsTrigger>
+          <TabsTrigger value="commented" className="flex-1 h-full rounded-none text-xs sm:text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Commented</TabsTrigger>
+          <TabsTrigger value="quoted" className="flex-1 h-full rounded-none text-xs sm:text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Quoted</TabsTrigger>
+          <TabsTrigger value="about" className="flex-1 h-full rounded-none text-xs sm:text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">About</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all-posts" className="mt-4">
