@@ -101,52 +101,6 @@ function ChatPanel() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Icon button with badge                                             */
-/* ------------------------------------------------------------------ */
-
-function IconBtn({
-  label,
-  badge,
-  badgeColor = 'red',
-  active,
-  onClick,
-  children,
-}: {
-  label: string;
-  badge?: number;
-  badgeColor?: 'red' | 'green';
-  active?: boolean;
-  onClick?: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={cn(
-        'relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-150 cursor-pointer border-0',
-        active
-          ? 'bg-[#e8f5ee] text-[#52b274]'
-          : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-      )}
-    >
-      {children}
-      {!!badge && badge > 0 && (
-        <span
-          className={cn(
-            'absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-white text-[9px] font-bold leading-none shadow ring-2 ring-background',
-            badgeColor === 'green' ? 'bg-[#52b274]' : 'bg-red-500'
-          )}
-        >
-          {badge > 99 ? '99+' : badge}
-        </span>
-      )}
-    </button>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  DashboardLayout                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -372,18 +326,7 @@ export default function DashboardLayout({
             />
             <span className="text-[18px] font-extrabold tracking-tight text-[#52b274]">Quote.Vote</span>
           </Link>
-
-          <div className="flex items-center gap-1.5">
-            <IconBtn
-              label="Messages"
-              badge={unreadChat}
-              badgeColor="green"
-              active={chatOpen}
-              onClick={() => setChatOpen(!chatOpen)}
-            >
-              <MessageSquare className="size-5" fill={chatOpen ? 'currentColor' : 'none'} />
-            </IconBtn>
-          </div>
+          {/* Messages live in the mobile bottom nav — no duplicate here. */}
         </div>
       </header>
 
