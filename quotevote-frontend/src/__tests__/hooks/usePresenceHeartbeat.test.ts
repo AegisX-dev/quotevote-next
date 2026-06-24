@@ -1,12 +1,19 @@
 import { renderHook, act } from '@testing-library/react'
 import { useMutation } from '@apollo/client/react'
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat'
+import { isAuthenticated } from '@/lib/utils/auth'
 
 // Mock Apollo Client
 jest.mock('@apollo/client/react', () => ({
     ...jest.requireActual('@apollo/client/react'),
     useMutation: jest.fn(),
 }))
+
+jest.mock('@/lib/utils/auth', () => ({
+    isAuthenticated: jest.fn(),
+}))
+
+const mockIsAuthenticated = isAuthenticated as jest.MockedFunction<typeof isAuthenticated>
 
 describe('usePresenceHeartbeat', () => {
     let mockHeartbeat: jest.Mock
@@ -15,6 +22,7 @@ describe('usePresenceHeartbeat', () => {
     beforeEach(() => {
         jest.clearAllMocks()
         jest.useFakeTimers()
+        mockIsAuthenticated.mockReturnValue(true)
         mockHeartbeat = jest.fn().mockResolvedValue({ data: { heartbeat: { success: true } } })
         mockError = undefined
 
@@ -23,6 +31,14 @@ describe('usePresenceHeartbeat', () => {
 
     afterEach(() => {
         jest.useRealTimers()
+    })
+
+    it('should not send heartbeat when user is not authenticated', () => {
+        mockIsAuthenticated.mockReturnValue(false)
+
+        renderHook(() => usePresenceHeartbeat())
+
+        expect(mockHeartbeat).not.toHaveBeenCalled()
     })
 
     it('should send initial heartbeat immediately', () => {

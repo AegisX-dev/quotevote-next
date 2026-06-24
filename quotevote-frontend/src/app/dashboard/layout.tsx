@@ -30,7 +30,6 @@ import { routeHasPersistentChatPanel } from '@/lib/utils/chatLayout';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { usePresenceSubscription } from '@/hooks/usePresenceSubscription';
 import { useRosterManagement } from '@/hooks/useRosterManagement';
-import { RequestInviteDialog } from '@/components/RequestInviteDialog';
 import ChatContent from '@/components/Chat/ChatContent';
 import { GET_NOTIFICATIONS, GET_CHAT_ROOMS } from '@/graphql/queries';
 import { DisplayAvatar } from '@/components/DisplayAvatar';
@@ -112,7 +111,7 @@ export default function DashboardLayout({
 }): React.ReactNode {
   const pathname = usePathname();
   const router = useRouter();
-  const { isModalOpen, closeAuthModal } = useAuthModal();
+  const { openAuthModal } = useAuthModal();
   const setSelectedPage = useAppStore((s) => s.setSelectedPage);
   const setChatOpen = useAppStore((s) => s.setChatOpen);
   const user = useAppStore((s) => s.user.data);
@@ -166,6 +165,18 @@ export default function DashboardLayout({
       logout();
     }
     router.push('/auths/login');
+  };
+
+  const requireAuthForAction = (action: () => void, view: 'invite' | 'login' = 'login') => {
+    if (!loggedIn) {
+      openAuthModal({ view });
+      return;
+    }
+    action();
+  };
+
+  const handleCreateClick = () => {
+    requireAuthForAction(() => setSubmitDialogOpen(true));
   };
 
   return (
@@ -224,7 +235,7 @@ export default function DashboardLayout({
             <button
               type="button"
               data-testid="create-post-button"
-              onClick={() => setSubmitDialogOpen(true)}
+              onClick={handleCreateClick}
               className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-[#52b274] text-white text-[13px] font-semibold shadow-[0_2px_6px_rgba(82,178,116,0.40)] hover:bg-[#4a9e63] hover:shadow-[0_3px_10px_rgba(82,178,116,0.50)] active:scale-95 transition-all duration-150 cursor-pointer border-0 flex-shrink-0"
               aria-label="Create new quote"
             >
@@ -310,6 +321,16 @@ export default function DashboardLayout({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+
+            {!loggedIn && (
+              <button
+                type="button"
+                onClick={() => openAuthModal({ view: 'login' })}
+                className="flex items-center gap-1.5 h-9 px-4 rounded-full border border-[#52b274] text-[#52b274] text-[13px] font-semibold hover:bg-[#52b274]/10 transition-all duration-150 cursor-pointer flex-shrink-0"
+              >
+                Sign in
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -371,7 +392,7 @@ export default function DashboardLayout({
         <button
           type="button"
           data-testid="create-post-button"
-          onClick={() => setSubmitDialogOpen(true)}
+          onClick={handleCreateClick}
           className="flex flex-col items-center justify-center flex-1 h-full cursor-pointer border-0 bg-transparent"
           aria-label="Create"
         >
@@ -384,10 +405,11 @@ export default function DashboardLayout({
         </button>
 
         {/* Notifications */}
-        <Link
-          href="/dashboard/notifications"
+        <button
+          type="button"
+          onClick={() => requireAuthForAction(() => router.push('/dashboard/notifications'))}
           className={cn(
-            'relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150',
+            'relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150 border-0 bg-transparent cursor-pointer',
             isActive('/dashboard/notifications') ? 'text-[#52b274]' : 'text-muted-foreground'
           )}
           aria-label="Notifications"
@@ -401,7 +423,7 @@ export default function DashboardLayout({
             )}
           </div>
           <span className="text-[10px] font-semibold">Activity</span>
-        </Link>
+        </button>
 
         {/* Profile — opens an account menu (Your Profile, Settings & Privacy,
             Sign out) instead of navigating directly. */}
@@ -469,17 +491,18 @@ export default function DashboardLayout({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Link
-            href="/dashboard/profile"
+          <button
+            type="button"
+            onClick={() => openAuthModal({ view: 'login' })}
             className={cn(
-              'flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150',
-              isActive('/dashboard/profile') ? 'text-[#52b274]' : 'text-muted-foreground'
+              'flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150 border-0 bg-transparent cursor-pointer',
+              'text-muted-foreground'
             )}
-            aria-label="Profile"
+            aria-label="Sign in"
           >
             <User className="size-[22px]" />
-            <span className="text-[10px] font-semibold">Profile</span>
-          </Link>
+            <span className="text-[10px] font-semibold">Sign in</span>
+          </button>
         )}
       </nav>
 
@@ -526,7 +549,6 @@ export default function DashboardLayout({
       </main>
 
       <ChatPanel />
-      <RequestInviteDialog open={isModalOpen} onClose={closeAuthModal} />
 
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         {/* z-[70] keeps the full-screen create form above the mobile bottom
