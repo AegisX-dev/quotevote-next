@@ -196,11 +196,15 @@ export default function Post({
 
   const handleAddComment = async (comment: string, commentWithQuote = false) => {
     if (!ensureAuth()) return
+    if (!comment.trim()) {
+      toast.error('Please enter a comment')
+      return
+    }
     try {
       await addComment({
         variables: {
           comment: {
-            userId: user._id, content: comment,
+            userId: user._id, content: comment.trim(),
             startWordIndex: selectedText.startIndex, endWordIndex: selectedText.endIndex,
             postId: _id, url: post.url,
             quote: commentWithQuote ? selectedText.text : '',

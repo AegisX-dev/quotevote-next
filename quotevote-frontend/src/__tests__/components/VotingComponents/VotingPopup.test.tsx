@@ -257,8 +257,8 @@ describe('VotingPopup', () => {
     const input = screen.getByPlaceholderText('Type comment here')
     fireEvent.change(input, { target: { value: 'Test comment' } })
 
-    // Press Enter - component uses onKeyPress
-    fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13, keyCode: 13 })
+    // Press Enter - component uses onKeyDown
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13, keyCode: 13 })
 
     await waitFor(() => {
       expect(onAddComment).toHaveBeenCalledWith('Test comment', true)
@@ -302,6 +302,60 @@ describe('VotingPopup', () => {
 
     await waitFor(() => {
       expect(onAddComment).toHaveBeenCalledWith('Test comment', false)
+    })
+  })
+
+  it('shows validation error when submitting an empty comment', async () => {
+    const onAddComment = jest.fn()
+    render(<VotingPopup {...defaultProps} onAddComment={onAddComment} />)
+
+    const commentButton = screen
+      .getByTestId('comment-icon')
+      .closest('button')
+    if (commentButton) {
+      fireEvent.click(commentButton)
+    }
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Type comment here')).toBeInTheDocument()
+    })
+
+    const sendButton = screen.getByText('Send')
+    fireEvent.click(sendButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a comment')).toBeInTheDocument()
+    })
+    expect(onAddComment).not.toHaveBeenCalled()
+  })
+
+  it('clears validation error when user types', async () => {
+    const onAddComment = jest.fn()
+    render(<VotingPopup {...defaultProps} onAddComment={onAddComment} />)
+
+    const commentButton = screen
+      .getByTestId('comment-icon')
+      .closest('button')
+    if (commentButton) {
+      fireEvent.click(commentButton)
+    }
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Type comment here')).toBeInTheDocument()
+    })
+
+    const sendButton = screen.getByText('Send')
+    fireEvent.click(sendButton)
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a comment')).toBeInTheDocument()
+    })
+
+    const input = screen.getByPlaceholderText('Type comment here')
+    fireEvent.change(input, { target: { value: 'New comment' } })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Please enter a comment')).not.toBeInTheDocument()
     })
   })
 

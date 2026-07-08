@@ -37,6 +37,7 @@ export default function VotingPopup({
     type: '',
   })
   const [comment, setComment] = useState('')
+  const [validationError, setValidationError] = useState('')
   const [checkWindowWidth, setCheckWindowWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 400
@@ -58,6 +59,13 @@ export default function VotingPopup({
       window.removeEventListener('resize', handleWindowSizeChange)
     }
   }, [handleWindowSizeChange])
+
+  const handleSetExpand = useCallback((newExpand: { open: boolean; type: string }) => {
+    if (!newExpand.open || newExpand.type !== 'comment') {
+      setValidationError('')
+    }
+    setExpand(newExpand)
+  }, [])
 
   const voteOptions: VoteOption[] = (() => {
     if (expand.type === 'up') {
@@ -87,27 +95,41 @@ export default function VotingPopup({
         return // Don't allow voting if user has already voted
       }
       onVote({ type: expand.type as VoteType, tags })
-      setExpand({ open: false, type: '' })
+      handleSetExpand({ open: false, type: '' })
     },
-    [hasVoted, expand.type, onVote],
+    [hasVoted, expand.type, onVote, handleSetExpand],
   )
 
   const handleAddComment = useCallback(() => {
+    if (!comment.trim()) {
+      setValidationError('Please enter a comment')
+      return
+    }
     const withQuote = !isEmpty(selectedText.text)
-    onAddComment(comment, withQuote)
+    onAddComment(comment.trim(), withQuote)
     setComment('')
-    setExpand({ open: false, type: '' })
-  }, [comment, selectedText.text, onAddComment])
+    handleSetExpand({ open: false, type: '' })
+  }, [comment, selectedText.text, onAddComment, handleSetExpand])
 
   const handleAddQuote = useCallback(() => {
     onAddQuote()
-    setExpand({ open: false, type: '' })
-  }, [onAddQuote])
+    handleSetExpand({ open: false, type: '' })
+  }, [onAddQuote, handleSetExpand])
 
   useEffect(() => {
     const selectionPopover = document.querySelector('#popButtons')
     if (selectionPopover) {
       const handleMouseDown = (e: Event) => {
+        const target = e.target as HTMLElement
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable ||
+            target.closest('input, textarea'))
+        ) {
+          return
+        }
         e.preventDefault()
       }
       selectionPopover.addEventListener('mousedown', handleMouseDown)
@@ -121,15 +143,6 @@ export default function VotingPopup({
   }, [])
 
   const isComment = expand.type === 'comment'
-  let inputValue = comment
-
-  if (!isComment) {
-    if (expand.type === 'up') {
-      inputValue = '#true | #agree | #like'
-    } else if (expand.type === 'down') {
-      inputValue = '#false | #disagree | #dislike'
-    }
-  }
 
   const voteTooltipText = hasVoted
     ? `You have already ${userVoteType === 'up' ? 'upvoted' : 'downvoted'} this post`
@@ -190,7 +203,7 @@ export default function VotingPopup({
                 aria-label="Upvote"
                 onClick={() => {
                   if (!hasVoted) {
-                    setExpand({
+                    handleSetExpand({
                       open: expand.type !== 'up' || !expand.open,
                       type: 'up',
                     })
@@ -246,7 +259,7 @@ export default function VotingPopup({
                 aria-label="Downvote"
                 onClick={() => {
                   if (!hasVoted) {
-                    setExpand({
+                    handleSetExpand({
                       open: expand.type !== 'down' || !expand.open,
                       type: 'down',
                     })
@@ -270,7 +283,7 @@ export default function VotingPopup({
               size="icon"
               aria-label="Comment"
               onClick={() =>
-                setExpand({
+                handleSetExpand({
                   open: expand.type !== 'comment' || !expand.open,
                   type: 'comment',
                 })
@@ -293,7 +306,7 @@ export default function VotingPopup({
               aria-label="Quote"
               onClick={() => {
                 const newQuote = expand.type !== 'quote'
-                setExpand({ open: false, type: newQuote ? 'quote' : '' })
+                handleSetExpand({ open: false, type: newQuote ? 'quote' : '' })
                 if (newQuote) {
                   handleAddQuote()
                 }
@@ -321,25 +334,40 @@ export default function VotingPopup({
         }}
       >
         {isComment ? (
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Type comment here"
-              value={inputValue}
-              onChange={(e) => setComment(e.target.value)}
-              className="flex-1 text-[#3c4858cc] pb-1"
-              onKeyPress={(event) => {
-                if (event.key === 'Enter') {
-                  handleAddComment()
-                }
-              }}
-            />
-            <Button
-              onClick={handleAddComment}
-              className="bg-[#52b274] text-white hover:bg-[#52b274]/90"
-              size="sm"
-            >
-              Send
-            </Button>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Type comment here"
+                value={comment}
+                onChange={(e) => {
+                  setComment(e.target.value)
+                  if (validationError) {
+                    setValidationError('')
+                  }
+                }}
+                className={cn(
+                  'flex-1 text-[#3c4858cc] pb-1',
+                  validationError && 'border-destructive focus-visible:ring-destructive',
+                )}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault()
+                    handleAddComment()
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                onClick={handleAddComment}
+                className="bg-[#52b274] text-white hover:bg-[#52b274]/90"
+                size="sm"
+              >
+                Send
+              </Button>
+            </div>
+            {validationError && (
+              <p className="text-xs text-destructive m-0 px-1">{validationError}</p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
