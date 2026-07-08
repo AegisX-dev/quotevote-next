@@ -45,6 +45,7 @@ export async function selectTextByTestId(page: Page, testId: string): Promise<vo
       clientY: rect.top + rect.height / 2,
     };
 
+    selectable.dispatchEvent(new Event('selectstart', { bubbles: true, cancelable: true }));
     selectable.dispatchEvent(new PointerEvent('pointermove', eventInit));
     selectable.dispatchEvent(new PointerEvent('pointerup', eventInit));
     document.dispatchEvent(new Event('selectionchange', { bubbles: true }));
@@ -55,5 +56,13 @@ export async function selectTextByTestId(page: Page, testId: string): Promise<vo
  * Convenience helper to select text specifically within the post body.
  */
 export async function selectPostText(page: Page): Promise<void> {
+  await selectTextByTestId(page, 'post-detail-body');
+}
+
+/**
+ * Convenience helper to select text specifically within the post body on mobile viewports.
+ * Simulates touch/pointer behavior closely enough to validate real mobile usability.
+ */
+export async function selectMobilePostText(page: Page): Promise<void> {
   await selectTextByTestId(page, 'post-detail-body');
 }
